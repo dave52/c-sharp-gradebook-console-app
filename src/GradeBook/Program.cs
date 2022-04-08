@@ -12,10 +12,11 @@ namespace GradeBook
             var bookerT = new Book("Booker T");
             bookerT.AddGrade(x);
             bookerT.AddGrade(y);
-            bookerT.GetStatistics();
+            var stats = bookerT.GetStatistics();
 
 
             Console.WriteLine(x + y);
+            Console.WriteLine($"The letter grade is {stats.Letter}");
 
             if (args.Length > 0)
 			{
