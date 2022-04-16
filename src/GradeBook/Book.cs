@@ -1,15 +1,76 @@
 namespace GradeBook
 {
-  public class Book
+  public delegate void GradeAddedDelegate(object sender, EventArgs args);
+
+  public class NamedObject
+  {
+    public NamedObject(string name)
+    {
+      Name = name;
+    }
+
+    public string Name
+    {
+      get;
+      set;
+    }
+  }
+
+  public interface IBook
+  {
+    void AddGrade(double grade);
+    Statistics GetStatistics();
+    string Name { get; }
+    event GradeAddedDelegate GradeAdded;
+  }
+
+  public abstract class Book : NamedObject, IBook
+  {
+    public Book(string name) : base(name)
+    {
+    }
+
+    public abstract event GradeAddedDelegate GradeAdded;
+    public abstract void AddGrade(double grade);
+    public abstract Statistics GetStatistics();
+  }
+
+  public class DiskBook : Book
+  {
+    public DiskBook(string name) : base(name)
+    {
+    }
+
+    public override event GradeAddedDelegate GradeAdded;
+
+    public override void AddGrade(double grade)
+    {
+      using(var writer = File.AppendText($"{Name}.txt"))
+      {
+        writer.WriteLine(grade);
+        if(GradeAdded != null)
+        {
+          GradeAdded(this, new EventArgs());
+        }
+      }
+    }
+
+    public override Statistics GetStatistics()
+    {
+      throw new NotImplementedException();
+    }
+  }
+
+  public class InMemoryBook : Book
   {
     // constructor method name as class as, and initializes a field set below to new List<double>();
-    public Book(string name)
+    public InMemoryBook(string name) : base(name)
     {
       grades = new List<double>();
       this.Name = name;
     }
 
-    // public void AddLetterGrade(char letter)
+    // public void AddGrade(char letter)
     // {
     //   switch(letter)
     //   {
@@ -31,19 +92,25 @@ namespace GradeBook
     //   }
     // }
 
-    public void AddGrade(double grade)
+    public override void AddGrade(double grade)
     {
       if (grade <= 100 && grade >= 0)
       {
         grades.Add(grade);
+        if(GradeAdded != null)
+        {
+          GradeAdded(this, new EventArgs());
+        }
       }
       else
       {
-        Console.WriteLine("Invalid value");
+        throw new ArgumentException($"Invalid {nameof(grade)}");
       }
     }
 
-    public Statistics GetStatistics()
+    public override event GradeAddedDelegate GradeAdded;
+
+    public override Statistics GetStatistics()
     {
       var result = new Statistics();
       result.Average = 0.0;
@@ -128,7 +195,33 @@ namespace GradeBook
       // Console.WriteLine($"The lowest grade is {lowGrade}");
     }
 
-    public string Name;
+    // public string Name
+    // {
+    //   get
+    //   {
+    //     return name;
+    //   }
+    //   set
+    //   {
+    //     if (!String.IsNullOrEmpty(value))
+    //     {
+    //       name = value;
+    //     }
+    //     else
+    //     {
+    //       Console.WriteLine($"{nameof(value)} is not an acceptable setter value");
+    //       throw new ArgumentException($"Invalid {nameof(value)}");
+    //     }
+    //   }
+    // }
+
+    // private string name;
+
+    // can easily write the above verbose way as simply... does the same behind the scenes
+    // public string Name { 
+    //   get; 
+    //   set; 
+    // }
     private List<double> grades; // the field (a var outside of a method) of grades is set to type List<double> but not initialized
   }
 }
